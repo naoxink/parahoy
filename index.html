@@ -30,7 +30,7 @@
       <section v-for="s in sections" :key="s.key" :class="['col', 'sec-' + s.key]">
         <h2>{{ s.title }} <span class="count">{{ s.items.length }}</span></h2>
         <ul v-if="s.items.length">
-          <li v-for="t in s.items" :key="t.id" :class="['task', 'imp-' + t.importance, { done: t.done }]">
+          <li v-for="t in s.items" :key="t.id" :class="['task', 'imp-' + t.importance, { done: t.done }]" @dblclick="onDblClick($event, t)">
             <input type="checkbox" :checked="t.done" @change="toggle(t)" :aria-label="'Completar ' + t.text">
             <div class="body">
               <span class="title">
@@ -47,6 +47,7 @@
                 <span v-else-if="s.showDate">{{ shortDate(t.date) }}</span>
               </span>
             </div>
+            <button class="del edit" @click="startEdit(t)" :aria-label="'Editar ' + t.text" title="Editar (doble clic)">✎</button>
             <button class="del" @click="remove(t)" :aria-label="'Eliminar ' + t.text" title="Eliminar">×</button>
           </li>
         </ul>
@@ -56,16 +57,16 @@
 
     <button v-if="!open" class="fab" @click="openForm" title="Nueva tarea (N)">+ Nueva tarea</button>
 
-    <div v-if="open" class="backdrop" @click="closeForm"></div>
-    <div v-if="open" class="sheet" role="dialog" aria-label="Nueva tarea">
+    <div v-if="open" class="backdrop" @click="editingId || closeForm()"></div>
+    <div v-if="open" class="sheet" role="dialog" :aria-label="editingId ? 'Editar tarea' : 'Nueva tarea'">
       <div class="sheet-in">
         <div class="sheet-bar">
-          <h2>Nueva tarea</h2>
+          <h2>{{ editingId ? 'Editar tarea' : 'Nueva tarea' }}</h2>
           <button type="button" class="del" @click="closeForm" aria-label="Cerrar" title="Cerrar (Esc)">×</button>
         </div>
         <form class="add" @submit.prevent="addTask">
         <input class="f-text" v-model.trim="form.text" placeholder="¿Qué hay que hacer?" aria-label="Tarea" required ref="textInput">
-        <textarea class="f-note" v-model.trim="form.note" rows="2" placeholder="Nota (opcional)" aria-label="Nota"></textarea>
+        <textarea class="f-note" v-model.trim="form.note" rows="3" placeholder="Nota (opcional)" aria-label="Nota"></textarea>
         <input class="f-link" v-model.trim="form.link" type="url" placeholder="Enlace (opcional)" aria-label="Enlace">
         <input class="f-date" v-model="form.date" type="date" aria-label="Fecha" required>
         <div class="levels" role="radiogroup" aria-label="Importancia">
@@ -74,7 +75,7 @@
             {{ l.label }}
           </label>
         </div>
-        <button class="btn-add" type="submit">Añadir</button>
+        <button class="btn-add" type="submit">{{ editingId ? 'Guardar' : 'Añadir' }}</button>
       </form>
       </div>
     </div>

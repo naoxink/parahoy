@@ -36,6 +36,7 @@ createApp({
     const tasks = ref(loadTasks());
     const today = ref(toISO(new Date()));
     const open = ref(false);
+    const editingId = ref(null);
     const textInput = ref(null);
 
     const form = reactive({ text: '', note: '', link: '', date: today.value, importance: 2 });
@@ -65,7 +66,24 @@ createApp({
       open.value = true;
       nextTick(() => textInput.value?.focus());
     };
-    const closeForm = () => { open.value = false; };
+    const resetForm = () => {
+      form.text = ''; form.note = ''; form.link = '';
+      form.date = today.value; form.importance = 2;
+    };
+    const closeForm = () => {
+      open.value = false;
+      if (editingId.value) { editingId.value = null; resetForm(); }
+    };
+    const startEdit = t => {
+      Object.assign(form, { text: t.text, note: t.note || '', link: t.link || '', date: t.date, importance: t.importance });
+      editingId.value = t.id;
+      open.value = true;
+      nextTick(() => textInput.value?.focus());
+    };
+    const onDblClick = (e, t) => {
+      if (e.target.closest('a, button, input')) return;
+      startEdit(t);
+    };
 
     const onKey = e => {
       if (e.key === 'Escape' && open.value) return closeForm();
@@ -122,19 +140,23 @@ createApp({
 
     const addTask = () => {
       if (!form.text || !form.date) return;
-      tasks.value.push({
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      const data = {
         text: form.text,
         note: form.note,
         link: isSafeUrl(form.link) ? form.link : '',
         date: form.date,
         importance: form.importance,
-        done: false,
-      });
-      form.text = '';
-      form.note = '';
-      form.link = '';
-      closeForm();
+      };
+      if (editingId.value) {
+        const t = tasks.value.find(x => x.id === editingId.value);
+        if (t) Object.assign(t, data);
+        editingId.value = null;
+        resetForm();
+      } else {
+        tasks.value.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...data, done: false });
+        form.text = ''; form.note = ''; form.link = '';
+      }
+      open.value = false;
     };
 
     const toggle = t => { t.done = !t.done; };
@@ -142,7 +164,7 @@ createApp({
     const clearDone = () => { tasks.value = tasks.value.filter(t => !t.done); };
 
     return {
-      tasks, today, hoy, overdue, doneToday, pct, form, open, openForm, closeForm, levels, sections, later, doneCount, textInput,
+      tasks, today, hoy, editingId, startEdit, onDblClick, overdue, doneToday, pct, form, open, openForm, closeForm, levels, sections, later, doneCount, textInput,
       todayLabel, shortDate, jira: jiraKey, addTask, toggle, remove, clearDone,
     };
   },

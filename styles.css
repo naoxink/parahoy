@@ -218,6 +218,8 @@ a.txt:hover { text-decoration: underline; }
 }
 .task:hover .del, .del:focus-visible { opacity: 1; }
 .del:hover { color: var(--high); }
+.del.edit { font-size: 1rem; }
+.del.edit:hover { color: var(--accent); }
 
 .toggle {
   display: flex; align-items: center; gap: 0.5rem;
