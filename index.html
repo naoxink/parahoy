@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Para hoy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app" v-cloak>
+    <header class="top">
+      <h1>Para hoy</h1>
+      <p class="date">{{ todayLabel }}</p>
+    </header>
+
+    <main>
+      <section v-for="s in sections" :key="s.key" :class="'sec-' + s.key">
+        <h2>{{ s.title }} <span class="count">{{ s.items.length }}</span></h2>
+        <ul v-if="s.items.length">
+          <li v-for="t in s.items" :key="t.id" :class="['task', 'imp-' + t.importance, { done: t.done }]">
+            <input type="checkbox" :checked="t.done" @change="toggle(t)" :aria-label="'Completar ' + t.text">
+            <div class="body">
+              <a v-if="t.link" :href="t.link" target="_blank" rel="noopener noreferrer" class="txt">{{ t.text }}</a>
+              <span v-else class="txt">{{ t.text }}</span>
+              <span v-if="t.note" class="note">{{ t.note }}</span>
+              <span class="meta">
+                <span v-if="t.date < today && !t.done" class="late">Atrasada · {{ shortDate(t.date) }}</span>
+                <span v-else-if="s.showDate">{{ shortDate(t.date) }}</span>
+              </span>
+            </div>
+            <button class="del" @click="remove(t)" :aria-label="'Eliminar ' + t.text" title="Eliminar">×</button>
+          </li>
+        </ul>
+        <p v-else class="empty">{{ s.empty }}</p>
+      </section>
+
+      <section v-if="later.length">
+        <h2>
+          <button class="toggle" @click="showLater = !showLater" :aria-expanded="showLater">
+            Más adelante <span class="count">{{ later.length }}</span>
+            <span class="chev">{{ showLater ? '▾' : '▸' }}</span>
+          </button>
+        </h2>
+        <ul v-if="showLater">
+          <li v-for="t in later" :key="t.id" :class="['task', 'imp-' + t.importance, { done: t.done }]">
+            <input type="checkbox" :checked="t.done" @change="toggle(t)" :aria-label="'Completar ' + t.text">
+            <div class="body">
+              <a v-if="t.link" :href="t.link" target="_blank" rel="noopener noreferrer" class="txt">{{ t.text }}</a>
+              <span v-else class="txt">{{ t.text }}</span>
+              <span v-if="t.note" class="note">{{ t.note }}</span>
+              <span class="meta">{{ shortDate(t.date) }}</span>
+            </div>
+            <button class="del" @click="remove(t)" :aria-label="'Eliminar ' + t.text" title="Eliminar">×</button>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer v-if="doneCount" class="foot">
+      <button class="link" @click="clearDone">Limpiar {{ doneCount }} {{ doneCount === 1 ? 'hecha' : 'hechas' }}</button>
+    </footer>
+
+    <button v-if="!open" class="fab" @click="openForm" title="Nueva tarea (N)">+ Nueva tarea</button>
+
+    <div v-if="open" class="backdrop" @click="closeForm"></div>
+    <div v-if="open" class="sheet" role="dialog" aria-label="Nueva tarea">
+      <div class="sheet-in">
+        <div class="sheet-bar">
+          <h2>Nueva tarea</h2>
+          <button type="button" class="del" @click="closeForm" aria-label="Cerrar" title="Cerrar (Esc)">×</button>
+        </div>
+        <form class="add" @submit.prevent="addTask">
+        <input class="f-text" v-model.trim="form.text" placeholder="¿Qué hay que hacer?" aria-label="Tarea" required ref="textInput">
+        <textarea class="f-note" v-model.trim="form.note" rows="2" placeholder="Nota (opcional)" aria-label="Nota"></textarea>
+        <input class="f-link" v-model.trim="form.link" type="url" placeholder="Enlace (opcional)" aria-label="Enlace">
+        <input class="f-date" v-model="form.date" type="date" aria-label="Fecha" required>
+        <div class="levels" role="radiogroup" aria-label="Importancia">
+          <label v-for="l in levels" :key="l.value" :class="['lvl', 'lvl-' + l.value, { on: form.importance === l.value }]">
+            <input type="radio" v-model.number="form.importance" :value="l.value">
+            {{ l.label }}
+          </label>
+        </div>
+        <button class="btn-add" type="submit">Añadir</button>
+      </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

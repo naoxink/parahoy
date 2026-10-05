@@ -1,0 +1,212 @@
+:root {
+  --bg: #12161c;
+  --surface: #181d25;
+  --line: #262d38;
+  --text: #e4e8ee;
+  --muted: #8b95a5;
+  --accent: #5b8def;
+  --low: #5c6a7e;
+  --mid: #d9a441;
+  --high: #e2635a;
+  --radius: 4px;
+}
+
+* { box-sizing: border-box; }
+[v-cloak] { display: none; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+  font: 400 15px/1.5 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 6rem;
+}
+
+.top { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+h1 { margin: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
+.date { margin: 0; color: var(--muted); text-transform: capitalize; }
+
+/* Formulario */
+.add {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.f-text { grid-column: 1 / -1; font-size: 1rem; }
+
+.f-note { grid-column: 1 / -1; resize: vertical; min-height: 2.75rem; }
+
+textarea, input[type="text"], input[type="url"], input[type="date"], input:not([type]) {
+  width: 100%;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font: inherit;
+  color-scheme: dark;
+}
+input::placeholder { color: var(--muted); }
+
+.levels { display: flex; gap: 0.25rem; }
+.lvl {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0.5rem 0.25rem;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.875rem;
+  user-select: none;
+}
+.lvl input { position: absolute; opacity: 0; pointer-events: none; }
+.lvl:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lvl.on { color: var(--text); }
+.lvl-1.on { border-color: var(--low); background: rgba(92, 106, 126, .15); }
+.lvl-2.on { border-color: var(--mid); background: rgba(217, 164, 65, .12); }
+.lvl-3.on { border-color: var(--high); background: rgba(226, 99, 90, .12); }
+
+.btn-add {
+  padding: 0.6rem 1rem;
+  color: #fff;
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius);
+  font: inherit; font-weight: 500;
+  cursor: pointer;
+}
+.btn-add:hover { filter: brightness(1.1); }
+
+input:focus-visible, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Botón flotante y panel de nueva tarea */
+.fab {
+  position: fixed;
+  bottom: 1.25rem;
+  right: max(1.25rem, calc((100vw - 720px) / 2 + 1.25rem));
+  z-index: 10;
+  padding: 0.75rem 1.1rem;
+  color: #fff;
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius);
+  font: inherit; font-weight: 500;
+  cursor: pointer;
+}
+.fab:hover { filter: brightness(1.1); }
+
+.backdrop { position: fixed; inset: 0; z-index: 20; background: rgba(8, 10, 14, .6); }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  max-height: 90vh; overflow-y: auto;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+.sheet-in { max-width: 720px; margin: 0 auto; padding: 1rem 1.25rem 1.25rem; }
+.sheet-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.sheet-bar h2 { margin: 0; }
+.sheet-bar .del { opacity: 1; }
+.sheet input:not([type="radio"]), .sheet textarea { background: var(--bg); }
+
+/* Secciones */
+section { margin-top: 1.75rem; }
+main > section:first-child { margin-top: 1.25rem; }
+h2 {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-size: 1rem; font-weight: 600;
+}
+.count { color: var(--muted); font-weight: 400; font-size: 0.875rem; }
+.empty { margin: 0; color: var(--muted); }
+
+ul { list-style: none; margin: 0; padding: 0; }
+
+.task {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.6rem 0.5rem 0.6rem 0.75rem;
+  border-left: 3px solid var(--low);
+  border-bottom: 1px solid var(--line);
+}
+.task.imp-2 { border-left-color: var(--mid); }
+.task.imp-3 { border-left-color: var(--high); }
+.task:hover { background: var(--surface); }
+
+.task input[type="checkbox"] {
+  margin-top: 0.35rem;
+  width: 1rem; height: 1rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.txt { color: var(--text); overflow-wrap: anywhere; text-decoration: none; }
+a.txt { color: var(--accent); }
+a.txt:hover { text-decoration: underline; }
+.note {
+  color: var(--muted);
+  font-size: 0.875rem;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.meta { color: var(--muted); font-size: 0.8125rem; }
+.late { color: var(--high); }
+
+.task.done { border-left-color: var(--line); }
+.task.done .txt { color: var(--muted); text-decoration: line-through; }
+
+.del {
+  padding: 0 0.5rem;
+  color: var(--muted);
+  background: none; border: 0;
+  font-size: 1.25rem; line-height: 1.5;
+  cursor: pointer;
+  opacity: 0;
+}
+.task:hover .del, .del:focus-visible { opacity: 1; }
+.del:hover { color: var(--high); }
+
+.toggle {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0; color: inherit; background: none; border: 0;
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.chev { color: var(--muted); }
+
+.foot { margin-top: 2rem; }
+.link { padding: 0; color: var(--muted); background: none; border: 0; font: inherit; cursor: pointer; }
+.link:hover { color: var(--text); text-decoration: underline; }
+
+@media (min-width: 640px) {
+  .add { grid-template-columns: 1fr 1fr 11rem; }
+  .f-link { grid-column: 1 / 3; }
+  .f-date { grid-column: 3; }
+  .levels { grid-column: 1 / 3; }
+  .btn-add { grid-column: 3; }
+}
+
+@media (hover: none) { .del { opacity: 1; } }
+
+/* Hoy destaca en escritorio */
+@media (min-width: 640px) {
+  .sec-hoy h2 { font-size: 1.25rem; }
+  .sec-hoy .count { font-size: 1rem; }
+  .sec-hoy .task { padding-top: 0.85rem; padding-bottom: 0.85rem; gap: 0.9rem; }
+  .sec-hoy .task input[type="checkbox"] { width: 1.15rem; height: 1.15rem; margin-top: 0.5rem; }
+  .sec-hoy .txt { font-size: 1.375rem; font-weight: 500; line-height: 1.35; }
+  .sec-hoy .note { font-size: 1rem; }
+  .sec-hoy .meta { font-size: 0.875rem; }
+  .sec-hoy .del { font-size: 1.5rem; }
+  .sec-hoy .task.done .txt { font-weight: 400; }
+}
