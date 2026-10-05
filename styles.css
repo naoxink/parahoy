@@ -183,25 +183,25 @@ ul { list-style: none; margin: 0; padding: 0; }
 }
 
 .body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.title { display: flex; flex-wrap: nowrap; align-items: baseline; gap: 0 0.6rem; min-width: 0; }
+.title { display: block; }
 .jira {
   color: var(--accent);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   text-decoration: none;
+  margin-right: 0.5rem;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 .jira:hover { text-decoration: underline; }
 .task.done .jira { color: var(--muted); }
-.txt { color: var(--text); min-width: 0; overflow-wrap: anywhere; text-decoration: none; }
+.txt { color: var(--text); overflow-wrap: break-word; text-decoration: none; }
 a.txt { color: var(--accent); }
 a.txt:hover { text-decoration: underline; }
 .note {
   color: var(--muted);
   font-size: 0.875rem;
   white-space: pre-line;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .meta { color: var(--muted); font-size: 0.8125rem; }
 .late { color: var(--high); }
