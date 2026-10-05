@@ -26,6 +26,11 @@
       </div>
     </header>
 
+    <div v-if="allTags.length" class="tagbar">
+      <button v-for="g in allTags" :key="g.key" :class="['chip', { on: filter === g.key }]" @click="setFilter(g.key)">#{{ g.key }} <span class="n">{{ g.n }}</span></button>
+      <button v-if="filter" class="link" @click="filter = ''">Quitar filtro</button>
+    </div>
+
     <main class="board">
       <section v-for="s in sections" :key="s.key" :class="['col', 'sec-' + s.key]">
         <h2>{{ s.title }} <span class="count">{{ s.items.length }}</span></h2>
@@ -36,12 +41,12 @@
               <span class="title">
                 <template v-if="jira(t.link)">
                   <a :href="t.link" target="_blank" rel="noopener noreferrer" class="jira" title="Abrir en Jira">[{{ jira(t.link) }}]</a>
-                  <span class="txt">{{ t.text }}</span>
+                  <span class="txt"><rich-text :text="t.text" @tag="setFilter"></rich-text></span>
                 </template>
-                <a v-else-if="t.link" :href="t.link" target="_blank" rel="noopener noreferrer" class="txt">{{ t.text }}</a>
-                <span v-else class="txt">{{ t.text }}</span>
+                <a v-else-if="t.link" :href="t.link" target="_blank" rel="noopener noreferrer" class="txt"><rich-text :text="t.text" @tag="setFilter"></rich-text></a>
+                <span v-else class="txt"><rich-text :text="t.text" @tag="setFilter"></rich-text></span>
               </span>
-              <span v-if="t.note" class="note">{{ t.note }}</span>
+              <span v-if="t.note" class="note"><rich-text :text="t.note" @tag="setFilter"></rich-text></span>
               <span class="meta">
                 <span v-if="t.date < today && !t.done" class="late">Atrasada · {{ shortDate(t.date) }}</span>
                 <span v-else-if="s.showDate">{{ shortDate(t.date) }}</span>

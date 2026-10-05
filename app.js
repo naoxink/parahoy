@@ -31,12 +31,38 @@ const jiraKey = u => {
   } catch { return null; }
 };
 
+// Hashtags: #palabra (con al menos una letra). Devuelve partes de texto y de hashtag
+const TAG_RE = /(?<![\p{L}\p{N}_/&])#([\p{L}\p{N}_]+)/gu;
+const splitTags = str => {
+  const parts = [];
+  let last = 0;
+  for (const m of (str || '').matchAll(TAG_RE)) {
+    if (!/\p{L}/u.test(m[1])) continue;
+    if (m.index > last) parts.push({ v: str.slice(last, m.index) });
+    parts.push({ v: m[0], tag: m[1].toLowerCase() });
+    last = m.index + m[0].length;
+  }
+  if (last < (str || '').length) parts.push({ v: str.slice(last) });
+  return parts;
+};
+const tagsOf = str => splitTags(str).filter(p => p.tag).map(p => p.tag);
+
+const RichText = {
+  props: { text: { type: String, default: '' } },
+  emits: ['tag'],
+  setup(props, { emit }) {
+    return { parts: computed(() => splitTags(props.text)), emit };
+  },
+  template: `<template v-for="(p, i) in parts" :key="i"><span v-if="p.tag" class="tag" role="button" tabindex="0" :title="'Filtrar por #' + p.tag" @click.prevent.stop="emit('tag', p.tag)" @keydown.enter.prevent.stop="emit('tag', p.tag)">{{ p.v }}</span><template v-else>{{ p.v }}</template></template>`,
+};
+
 createApp({
   setup() {
     const tasks = ref(loadTasks());
     const today = ref(toISO(new Date()));
     const open = ref(false);
     const editingId = ref(null);
+    const filter = ref('');
     const textInput = ref(null);
 
     const form = reactive({ text: '', note: '', link: '', date: today.value, importance: 2 });
@@ -87,6 +113,7 @@ createApp({
 
     const onKey = e => {
       if (e.key === 'Escape' && open.value) return closeForm();
+      if (e.key === 'Escape' && filter.value) { filter.value = ''; return; }
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
       if (e.key.toLowerCase() === 'n' && !typing && !open.value && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
@@ -95,6 +122,25 @@ createApp({
     };
     onMounted(() => document.addEventListener('keydown', onKey));
     onUnmounted(() => document.removeEventListener('keydown', onKey));
+
+    const setFilter = k => { filter.value = filter.value === k ? '' : k; };
+    const visible = computed(() => filter.value
+      ? tasks.value.filter(t => tagsOf(t.text + ' ' + (t.note || '')).includes(filter.value))
+      : tasks.value);
+    const allTags = computed(() => {
+      const map = new Map();
+      for (const t of tasks.value) {
+        for (const k of new Set(tagsOf(t.text + ' ' + (t.note || '')))) {
+          map.set(k, (map.get(k) || 0) + (t.done ? 0 : 1));
+        }
+      }
+      return [...map].map(([key, n]) => ({ key, n }))
+        .sort((a, b) => b.n - a.n || a.key.localeCompare(b.key));
+    });
+
+    // Contador de pendientes (hoy y atrasadas) en el título de la pestaña
+    const pending = computed(() => tasks.value.filter(t => !t.done && t.date <= today.value).length);
+    watch(pending, n => { document.title = n ? `(${n}) Para hoy` : 'Para hoy'; }, { immediate: true });
 
     const tomorrow = computed(() => toISO(addDays(fromISO(today.value), 1)));
 
@@ -107,14 +153,14 @@ createApp({
     const sorted = list => [...list].sort((a, b) =>
       a.done - b.done || b.importance - a.importance || a.date.localeCompare(b.date));
 
-    const hoy = computed(() => sorted(tasks.value.filter(t =>
+    const hoy = computed(() => sorted(visible.value.filter(t =>
       t.date === today.value || (t.date < today.value && !t.done))));
-    const manana = computed(() => sorted(tasks.value.filter(t => t.date === tomorrow.value)));
-    const semana = computed(() => sorted(tasks.value.filter(t =>
+    const manana = computed(() => sorted(visible.value.filter(t => t.date === tomorrow.value)));
+    const semana = computed(() => sorted(visible.value.filter(t =>
       t.date > tomorrow.value && t.date <= friday.value && t.importance === 3)));
     const later = computed(() => {
       const shown = new Set([...hoy.value, ...manana.value, ...semana.value].map(t => t.id));
-      return sorted(tasks.value.filter(t => !shown.has(t.id) && t.date > today.value))
+      return sorted(visible.value.filter(t => !shown.has(t.id) && t.date > today.value))
         .sort((a, b) => a.date.localeCompare(b.date));
     });
 
@@ -127,7 +173,7 @@ createApp({
         empty: 'Nada planificado más adelante.' },
     ]);
 
-    const overdue = computed(() => tasks.value.filter(t => t.date < today.value && !t.done).length);
+    const overdue = computed(() => visible.value.filter(t => t.date < today.value && !t.done).length);
     const doneToday = computed(() => hoy.value.filter(t => t.done).length);
     const pct = computed(() => hoy.value.length ? Math.round(doneToday.value / hoy.value.length * 100) : 0);
 
@@ -164,8 +210,8 @@ createApp({
     const clearDone = () => { tasks.value = tasks.value.filter(t => !t.done); };
 
     return {
-      tasks, today, hoy, editingId, startEdit, onDblClick, overdue, doneToday, pct, form, open, openForm, closeForm, levels, sections, later, doneCount, textInput,
+      tasks, today, hoy, filter, setFilter, allTags, editingId, startEdit, onDblClick, overdue, doneToday, pct, form, open, openForm, closeForm, levels, sections, later, doneCount, textInput,
       todayLabel, shortDate, jira: jiraKey, addTask, toggle, remove, clearDone,
     };
   },
-}).mount('#app');
+}).component('rich-text', RichText).mount('#app');
