@@ -12,12 +12,22 @@
 <body>
   <div id="app" v-cloak>
     <header class="top">
-      <h1>Para hoy</h1>
-      <p class="date">{{ todayLabel }}</p>
+      <div class="brand">
+        <h1>Para hoy</h1>
+        <p class="date">{{ todayLabel }}</p>
+      </div>
+      <div class="status">
+        <span v-if="overdue" class="late">{{ overdue }} {{ overdue === 1 ? 'atrasada' : 'atrasadas' }}</span>
+        <div v-if="hoy.length" class="progress">
+          <span>{{ doneToday }} de {{ hoy.length }} hechas hoy</span>
+          <div class="bar"><i :style="{ width: pct + '%' }"></i></div>
+        </div>
+        <button v-if="doneCount" class="link" @click="clearDone">Limpiar hechas ({{ doneCount }})</button>
+      </div>
     </header>
 
-    <main>
-      <section v-for="s in sections" :key="s.key" :class="'sec-' + s.key">
+    <main class="board">
+      <section v-for="s in sections" :key="s.key" :class="['col', 'sec-' + s.key]">
         <h2>{{ s.title }} <span class="count">{{ s.items.length }}</span></h2>
         <ul v-if="s.items.length">
           <li v-for="t in s.items" :key="t.id" :class="['task', 'imp-' + t.importance, { done: t.done }]">
@@ -42,38 +52,7 @@
         </ul>
         <p v-else class="empty">{{ s.empty }}</p>
       </section>
-
-      <section v-if="later.length">
-        <h2>
-          <button class="toggle" @click="showLater = !showLater" :aria-expanded="showLater">
-            Más adelante <span class="count">{{ later.length }}</span>
-            <span class="chev">{{ showLater ? '▾' : '▸' }}</span>
-          </button>
-        </h2>
-        <ul v-if="showLater">
-          <li v-for="t in later" :key="t.id" :class="['task', 'imp-' + t.importance, { done: t.done }]">
-            <input type="checkbox" :checked="t.done" @change="toggle(t)" :aria-label="'Completar ' + t.text">
-            <div class="body">
-              <span class="title">
-                <template v-if="jira(t.link)">
-                  <a :href="t.link" target="_blank" rel="noopener noreferrer" class="jira" title="Abrir en Jira">[{{ jira(t.link) }}]</a>
-                  <span class="txt">{{ t.text }}</span>
-                </template>
-                <a v-else-if="t.link" :href="t.link" target="_blank" rel="noopener noreferrer" class="txt">{{ t.text }}</a>
-                <span v-else class="txt">{{ t.text }}</span>
-              </span>
-              <span v-if="t.note" class="note">{{ t.note }}</span>
-              <span class="meta">{{ shortDate(t.date) }}</span>
-            </div>
-            <button class="del" @click="remove(t)" :aria-label="'Eliminar ' + t.text" title="Eliminar">×</button>
-          </li>
-        </ul>
-      </section>
     </main>
-
-    <footer v-if="doneCount" class="foot">
-      <button class="link" @click="clearDone">Limpiar {{ doneCount }} {{ doneCount === 1 ? 'hecha' : 'hechas' }}</button>
-    </footer>
 
     <button v-if="!open" class="fab" @click="openForm" title="Nueva tarea (N)">+ Nueva tarea</button>
 

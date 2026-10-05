@@ -35,7 +35,6 @@ createApp({
   setup() {
     const tasks = ref(loadTasks());
     const today = ref(toISO(new Date()));
-    const showLater = ref(false);
     const open = ref(false);
     const textInput = ref(null);
 
@@ -106,7 +105,13 @@ createApp({
       { key: 'manana', title: 'Mañana', items: manana.value, empty: 'Nada apuntado para mañana.' },
       { key: 'semana', title: 'Importantes de esta semana', items: semana.value, showDate: true,
         empty: 'Sin tareas importantes el resto de la semana.' },
+      { key: 'later', title: 'Más adelante', items: later.value, showDate: true,
+        empty: 'Nada planificado más adelante.' },
     ]);
+
+    const overdue = computed(() => tasks.value.filter(t => t.date < today.value && !t.done).length);
+    const doneToday = computed(() => hoy.value.filter(t => t.done).length);
+    const pct = computed(() => hoy.value.length ? Math.round(doneToday.value / hoy.value.length * 100) : 0);
 
     const doneCount = computed(() => tasks.value.filter(t => t.done).length);
 
@@ -137,7 +142,7 @@ createApp({
     const clearDone = () => { tasks.value = tasks.value.filter(t => !t.done); };
 
     return {
-      tasks, today, form, open, openForm, closeForm, levels, sections, later, showLater, doneCount, textInput,
+      tasks, today, hoy, overdue, doneToday, pct, form, open, openForm, closeForm, levels, sections, later, doneCount, textInput,
       todayLabel, shortDate, jira: jiraKey, addTask, toggle, remove, clearDone,
     };
   },
