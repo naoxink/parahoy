@@ -23,8 +23,14 @@
           <li v-for="t in s.items" :key="t.id" :class="['task', 'imp-' + t.importance, { done: t.done }]">
             <input type="checkbox" :checked="t.done" @change="toggle(t)" :aria-label="'Completar ' + t.text">
             <div class="body">
-              <a v-if="t.link" :href="t.link" target="_blank" rel="noopener noreferrer" class="txt">{{ t.text }}</a>
-              <span v-else class="txt">{{ t.text }}</span>
+              <span class="title">
+                <template v-if="jira(t.link)">
+                  <a :href="t.link" target="_blank" rel="noopener noreferrer" class="jira" title="Abrir en Jira">[{{ jira(t.link) }}]</a>
+                  <span class="txt">{{ t.text }}</span>
+                </template>
+                <a v-else-if="t.link" :href="t.link" target="_blank" rel="noopener noreferrer" class="txt">{{ t.text }}</a>
+                <span v-else class="txt">{{ t.text }}</span>
+              </span>
               <span v-if="t.note" class="note">{{ t.note }}</span>
               <span class="meta">
                 <span v-if="t.date < today && !t.done" class="late">Atrasada · {{ shortDate(t.date) }}</span>
@@ -48,8 +54,14 @@
           <li v-for="t in later" :key="t.id" :class="['task', 'imp-' + t.importance, { done: t.done }]">
             <input type="checkbox" :checked="t.done" @change="toggle(t)" :aria-label="'Completar ' + t.text">
             <div class="body">
-              <a v-if="t.link" :href="t.link" target="_blank" rel="noopener noreferrer" class="txt">{{ t.text }}</a>
-              <span v-else class="txt">{{ t.text }}</span>
+              <span class="title">
+                <template v-if="jira(t.link)">
+                  <a :href="t.link" target="_blank" rel="noopener noreferrer" class="jira" title="Abrir en Jira">[{{ jira(t.link) }}]</a>
+                  <span class="txt">{{ t.text }}</span>
+                </template>
+                <a v-else-if="t.link" :href="t.link" target="_blank" rel="noopener noreferrer" class="txt">{{ t.text }}</a>
+                <span v-else class="txt">{{ t.text }}</span>
+              </span>
               <span v-if="t.note" class="note">{{ t.note }}</span>
               <span class="meta">{{ shortDate(t.date) }}</span>
             </div>

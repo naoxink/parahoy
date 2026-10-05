@@ -19,6 +19,18 @@ const isSafeUrl = u => {
   try { return ['http:', 'https:'].includes(new URL(u).protocol); } catch { return false; }
 };
 
+// Devuelve la clave (ej. ABC-123) si el enlace es una incidencia de Jira Cloud
+const jiraKey = u => {
+  if (!u) return null;
+  try {
+    const x = new URL(u);
+    if (!x.hostname.endsWith('.atlassian.net')) return null;
+    const m = x.pathname.match(/\/browse\/([A-Z][A-Z0-9_]*-\d+)/i)
+      || (x.searchParams.get('selectedIssue') || '').match(/^([A-Z][A-Z0-9_]*-\d+)$/i);
+    return m ? m[1].toUpperCase() : null;
+  } catch { return null; }
+};
+
 createApp({
   setup() {
     const tasks = ref(loadTasks());
@@ -126,7 +138,7 @@ createApp({
 
     return {
       tasks, today, form, open, openForm, closeForm, levels, sections, later, showLater, doneCount, textInput,
-      todayLabel, shortDate, addTask, toggle, remove, clearDone,
+      todayLabel, shortDate, jira: jiraKey, addTask, toggle, remove, clearDone,
     };
   },
 }).mount('#app');
