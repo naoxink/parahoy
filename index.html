@@ -32,8 +32,9 @@
     </div>
 
     <main class="board">
-      <section v-for="s in sections" :key="s.key" :class="['col', 'sec-' + s.key]">
-        <h2>{{ s.title }} <span class="count">{{ s.items.length }}</span></h2>
+      <section v-for="s in sections" :key="s.key" :class="['col', 'sec-' + s.key]"
+              @dblclick="onSectionDblClick($event, s)">
+        <h2 title="Doble clic para añadir una tarea aquí">{{ s.title }} <span class="count">{{ s.items.length }}</span></h2>
         <ul v-if="s.items.length">
           <li v-for="t in s.items" :key="t.id" :class="['task', 'imp-' + t.importance, { done: t.done }]" @dblclick="onDblClick($event, t)">
             <input type="checkbox" :checked="t.done" @change="toggle(t)" :aria-label="'Completar ' + t.text">
@@ -60,7 +61,7 @@
       </section>
     </main>
 
-    <button v-if="!open" class="fab" @click="openForm" title="Nueva tarea (N)">+ Nueva tarea</button>
+    <button v-if="!open" class="fab" @click="openForm()" title="Nueva tarea (N)">+ Nueva tarea</button>
 
     <div v-if="open" class="backdrop" @click="editingId || closeForm()"></div>
     <div v-if="open" class="sheet" role="dialog" :aria-label="editingId ? 'Editar tarea' : 'Nueva tarea'">

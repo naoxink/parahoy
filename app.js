@@ -87,8 +87,10 @@ createApp({
     onMounted(() => document.addEventListener('visibilitychange', refreshToday));
     onUnmounted(() => document.removeEventListener('visibilitychange', refreshToday));
 
-    const openForm = () => {
-      if (form.date < today.value) form.date = today.value;
+    const openForm = (opts = {}) => {
+      if (opts.date) form.date = opts.date;
+      else if (form.date < today.value) form.date = today.value;
+      if (opts.importance) form.importance = opts.importance;
       open.value = true;
       nextTick(() => textInput.value?.focus());
     };
@@ -110,7 +112,12 @@ createApp({
       if (e.target.closest('a, button, input')) return;
       startEdit(t);
     };
-
+    const onSectionDblClick = (e, s) => {
+      // Si se hace doble clic sobre una tarea, ya se encarga onDblClick (editar)
+      if (open.value || e.target.closest('.task, a, button, input')) return;
+      window.getSelection()?.removeAllRanges(); // evita que se seleccione una palabra
+      openForm({ date: s.date, importance: s.importance || 2 });
+    };
     const onKey = e => {
       if (e.key === 'Escape' && open.value) return closeForm();
       if (e.key === 'Escape' && filter.value) { filter.value = ''; return; }
@@ -164,12 +171,22 @@ createApp({
         .sort((a, b) => a.date.localeCompare(b.date));
     });
 
+    // Primer día que cae dentro de "Más adelante"
+    const laterDate = computed(() => {
+      const base = friday.value > tomorrow.value ? friday.value : tomorrow.value;
+      return toISO(addDays(fromISO(base), 1));
+    });
+
     const sections = computed(() => [
-      { key: 'hoy', title: 'Hoy', items: hoy.value, empty: 'Nada pendiente para hoy.' },
-      { key: 'manana', title: 'Mañana', items: manana.value, empty: 'Nada apuntado para mañana.' },
+      { key: 'hoy', title: 'Hoy', items: hoy.value, date: today.value,
+        empty: 'Nada pendiente para hoy.' },
+      { key: 'manana', title: 'Mañana', items: manana.value, date: tomorrow.value,
+        empty: 'Nada apuntado para mañana.' },
       { key: 'semana', title: 'Importantes de esta semana', items: semana.value, showDate: true,
+        date: friday.value > tomorrow.value ? friday.value : null, importance: 3,
         empty: 'Sin tareas importantes el resto de la semana.' },
       { key: 'later', title: 'Más adelante', items: later.value, showDate: true,
+        date: laterDate.value,
         empty: 'Nada planificado más adelante.' },
     ]);
 
@@ -210,7 +227,7 @@ createApp({
     const clearDone = () => { tasks.value = tasks.value.filter(t => !t.done); };
 
     return {
-      tasks, today, hoy, filter, setFilter, allTags, editingId, startEdit, onDblClick, overdue, doneToday, pct, form, open, openForm, closeForm, levels, sections, later, doneCount, textInput,
+      tasks, today, hoy, filter, setFilter, allTags, editingId, startEdit, onDblClick, onSectionDblClick, overdue, doneToday, pct, form, open, openForm, closeForm, levels, sections, later, doneCount, textInput,
       todayLabel, shortDate, jira: jiraKey, addTask, toggle, remove, clearDone,
     };
   },
